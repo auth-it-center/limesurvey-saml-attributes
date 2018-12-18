@@ -20,12 +20,15 @@ Values map from A1,A2,...,An.
 *Example*: faculty,student,staff,affiliate,employee  
 *Maps to*: A1,A2,A3,A4,A5
 
+![Global Settings](images/global_settings.png)
+
 ## How to enable plugin for specific survey
 1. Go to **Surveys > (Select desired survey) > Simple Plugins** or
 **https:/example.com/index.php/admin/survey/sa/rendersidemenulink/surveyid/{survey_id}/subaction/plugins**
 2. Open **Settings for plugin FieldsSAML** accordion
 3. Click **Enabled** checkbox
 4. **Enable** desired fields
+![Plugin Settings](images/plugin_settings.png)
 5. **Create** survey group and name it **Personal Data**
 6. **Edit** group description on **Source** mode and add the following snippet
 ```html
@@ -34,7 +37,8 @@ Values map from A1,A2,...,An.
     setPersonalData();
   });
 </script>
-```
+```  
+![Personal Data Group](images/personal_data_group.png)
 7. **Create** desired fields and assign them the specified code, type and css-class  
 
 | Code          | Type            | CSS-Class        |
@@ -44,6 +48,14 @@ Values map from A1,A2,...,An.
 | affiliation\* | List Drop Down  | saml-affiliation |
 | department    | Short Free Text | saml-department  |
 
-(\*) Affiliation field **answer optionns** are defined like this
+code and type are highlighted
+![code and type are highlighted](images/email_field_general.png)
+
+code and css-class are highlighted
+![code and css-class are highlighted](images/email_field_display.png)
+
+(\*) Affiliation field **answer options** are defined like this
+![Affiliation Field Answer Options](images/affiliation_answer_options.png)
 
 ## Images
+![How saml data are appended on the survey](images/data_on_survey.png)
