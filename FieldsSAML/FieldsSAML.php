@@ -50,6 +50,11 @@ class FieldsSAML extends Limesurvey\PluginManager\PluginBase
             'help' => 'comma seperated, without spaces',
             'default' => 'faculty,student,staff,affiliate,employee',
         ],
+        'title_mapping' => [
+            'type' => 'string',
+            'label' => 'SAML attribute used as title',
+            'default' => 'title',
+        ],
     ];
 
     public function init()
@@ -101,6 +106,13 @@ class FieldsSAML extends Limesurvey\PluginManager\PluginBase
                     'help' => 'Enable the extraction of affiliation attribute to the survey',
                     'default' => false,
                     'current' => $this->get('fields_affiliation_enabled', 'Survey', $event->get('survey')),
+                ],
+                'fields_title_enabled' => [
+                    'type' => 'checkbox',
+                    'label' => 'Enable title field',
+                    'help' => 'Enable the extraction of title attribute to the survey',
+                    'default' => false,
+                    'current' => $this->get('fields_title_enabled', 'Survey', $event->get('survey')),
                 ]
             ]
         ]);
@@ -119,6 +131,11 @@ class FieldsSAML extends Limesurvey\PluginManager\PluginBase
     public function beforeSurveyPage()
     {
         $plugin_enabled = $this->get('fields_SAML_enabled', 'Survey', $this->event->get('surveyId'));
+
+        if (! $plugin_enabled) {
+            return false;
+        }
+
         $attributes = $this->getAttributesSAML();
         $filter = $this->getAttributesFilter();
 
@@ -155,6 +172,16 @@ class FieldsSAML extends Limesurvey\PluginManager\PluginBase
                 if (affiliationField) {
                     affiliationField.value = '{$attributes['affiliation']}'
                     affiliationField.disabled = true
+                }
+            ";
+        }
+
+        if ($filter['title']) {
+            $script .= "
+                let titleField = document.querySelector('.saml-title input')
+                if (titleField) {
+                    titleField.value = '{$attributes['title']}'
+                    titleField.disabled = true
                 }
             ";
         }
@@ -203,9 +230,7 @@ class FieldsSAML extends Limesurvey\PluginManager\PluginBase
 
         $ssp = $AuthSAML->get_saml_instance();
 
-        if (!$ssp->isAuthenticated()) {
-            throw new CHttpException(401, gT("We are sorry but you have to login in order to do this."));
-        }
+        $ssp->requireAuth();
 
         $attributes = $ssp->getAttributes();
 
@@ -213,11 +238,13 @@ class FieldsSAML extends Limesurvey\PluginManager\PluginBase
         $emailField = $this->get('email_mapping', null, null, 'mail');
         $department = $this->get('department_mapping', null, null, 'authDepartmentId');
         $affiliationField = $this->get('affiliation_mapping', null, null, 'eduPersonPrimaryAffiliation');
+        $titleField = $this->get('title_mapping', null, null, 'title');
 
         $attributes = [
             'name' => $attributes[$nameField][0],
             'email' => $attributes[$emailField][0],
             'department' => $attributes[$department][0],
+            'title' => $attributes[$title][0],
             'affiliation' => $this->mapAffiliation($attributes[$affiliationField][0]),
         ];
 
@@ -228,7 +255,7 @@ class FieldsSAML extends Limesurvey\PluginManager\PluginBase
     {
         $fieldmap = createFieldMap($survey, 'full', null, false, $response->attributes['startlanguage']);
         $fieldmap = array_filter($fieldmap, function($item) {
-            if (in_array($item['title'], ['email', 'name', 'department', 'affiliation'])) {
+            if (in_array($item['title'], ['email', 'name', 'department', 'affiliation', 'title'])) {
                 return true;
             }
             return false;
@@ -244,6 +271,7 @@ class FieldsSAML extends Limesurvey\PluginManager\PluginBase
             'name' => $this->get('fields_name_enabled', 'Survey', $id),
             'department' => $this->get('fields_department_enabled', 'Survey', $id),
             'affiliation' => $this->get('fields_affiliation_enabled', 'Survey', $id),
+            'title' => $this->get('fields_title_enabled', 'Survey', $id),
         ];
     }
 
