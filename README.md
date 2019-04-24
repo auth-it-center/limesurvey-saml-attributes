@@ -14,10 +14,11 @@ and **Enable** the plugin
 * **SAML attribute used as name** maps to SAML attribute that will be used as a name
 * **SAML attribute used as email** maps to SAML attribute that will be used as a email
 * **SAML attribute used as department** maps to SAML attribute that will be used as a department
+* **SAML attribute used as title** maps to SAML attribute that will be used as a title
 * **SAML attribute used as affiliation** maps to SAML attribute that will be used as a affiliation
-* **Available affiliations** Comma seperated list. **It is important for latter** when configuring the surveys.  
-Values map from A1,A2,...,An.  
-*Example*: faculty,student,staff,affiliate,employee  
+* **Available affiliations** Comma seperated list. **It is important for latter** when configuring the surveys.
+Values map from A1,A2,...,An.
+*Example*: faculty,student,staff,affiliate,employee
 *Maps to*: A1,A2,A3,A4,A5
 
 ![Global Settings](images/global_settings.png)
@@ -37,9 +38,9 @@ Values map from A1,A2,...,An.
     setPersonalData();
   });
 </script>
-```  
+```
 ![Personal Data Group](images/personal_data_group.png)
-7. **Create** desired fields and assign them the specified code, type and css-class  
+7. **Create** desired fields and assign them the specified code, type and css-class
 
 | Code          | Type            | CSS-Class        |
 |---------------|-----------------|------------------|
@@ -47,6 +48,7 @@ Values map from A1,A2,...,An.
 | name          | Short Free Text | saml-name        |
 | affiliation\* | List Drop Down  | saml-affiliation |
 | department    | Short Free Text | saml-department  |
+| title         | Short Free Text | saml-title       |
 
 code and type are highlighted
 ![code and type are highlighted](images/email_field_general.png)
