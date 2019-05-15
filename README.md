@@ -20,6 +20,7 @@ and **Enable** the plugin
 Values map from A1,A2,...,An.
 *Example*: faculty,student,staff,affiliate,employee
 *Maps to*: A1,A2,A3,A4,A5
+* **Language Index** if SAML provider support multiple languages, choose the desired language index
 
 ![Global Settings](images/global_settings.png)
 

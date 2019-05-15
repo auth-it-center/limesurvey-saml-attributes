@@ -55,6 +55,12 @@ class FieldsSAML extends Limesurvey\PluginManager\PluginBase
             'label' => 'SAML attribute used as title',
             'default' => 'title',
         ],
+        'language_index' => [
+            'type' => 'string',
+            'label' => 'Language Index',
+            'help' => 'If SAML provider support multiple languages, choose the desired language index',
+            'default' => '0'
+        ]
     ];
 
     public function init()
@@ -241,14 +247,32 @@ class FieldsSAML extends Limesurvey\PluginManager\PluginBase
         $titleField = $this->get('title_mapping', null, null, 'title');
 
         $attributes = [
-            'name' => $attributes[$nameField][0],
-            'email' => $attributes[$emailField][0],
-            'department' => $attributes[$department][0],
-            'title' => $attributes[$title][0],
-            'affiliation' => $this->mapAffiliation($attributes[$affiliationField][0]),
+            'name' => $this->extractFromAttributes($attributes, $nameField),
+            'email' => $this->extractFromAttributes($attributes, $emailField),
+            'department' => $this->extractFromAttributes($attributes, $department),
+            'title' => $this->extractFromAttributes($attributes, $titleField),
+            'affiliation' => $this->mapAffiliation($this->extractFromAttributes($attributes, $affiliationField)),
         ];
 
+
         return $attributes;
+    }
+
+    private function extractFromAttributes($attributes, $field) {
+        $index = 0;
+        // if SAML attribute is multilingual, set the index to language_index
+        if (isset($attributes[$field]) && count($attributes[$field]) > 1) {
+            $index = $this->get('language_index', null, null, '0');
+            // check if $index is a valid number
+            if (is_numeric($index)) {
+                // if it is parse it into int
+                $index = (int) $index;
+            } else {
+                // if not default it to 0
+                $index = 0;
+            }
+        }
+        return $attributes[$field][$index];
     }
 
     public function getAttributesFieldMap($survey)
