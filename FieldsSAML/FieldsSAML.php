@@ -47,7 +47,9 @@ class FieldsSAML extends Limesurvey\PluginManager\PluginBase
 
     public function init()
     {
-        $this->registerField('name', 'cn', false);
+        $this->registerField('full-name', 'cn', false);
+        $this->registerField('first-name', 'givenName', false);
+        $this->registerField('last-name', 'sn', false);
         $this->registerField('email', 'mail', false);
         $this->registerField('department', 'authDepartmentId', false);
         $this->registerField('affiliation', 'eduPersonPrimaryAffiliation', false, 'select');
