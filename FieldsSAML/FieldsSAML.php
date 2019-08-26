@@ -24,37 +24,6 @@ class FieldsSAML extends Limesurvey\PluginManager\PluginBase
     static protected $name = 'FieldsSAML';
 
     protected $settings = [
-        'name_mapping' => [
-            'type' => 'string',
-            'label' => 'SAML attribute used as name',
-            'default' => 'cn',
-        ],
-        'email_mapping' => [
-            'type' => 'string',
-            'label' => 'SAML attribute used as email',
-            'default' => 'mail',
-        ],
-        'department_mapping' => [
-            'type' => 'string',
-            'label' => 'SAML attribute used as department',
-            'default' => 'authDepartmentId',
-        ],
-        'affiliation_mapping' => [
-            'type' => 'string',
-            'label' => 'SAML attribute used as affiliation',
-            'default' => 'eduPersonPrimaryAffiliation',
-        ],
-        'affiliation_array' => [
-            'type' => 'string',
-            'label' => 'Available affiliations',
-            'help' => 'comma seperated, without spaces',
-            'default' => 'faculty,student,staff,affiliate,employee',
-        ],
-        'title_mapping' => [
-            'type' => 'string',
-            'label' => 'SAML attribute used as title',
-            'default' => 'title',
-        ],
         'language_index' => [
             'type' => 'string',
             'label' => 'Language Index',
@@ -63,67 +32,122 @@ class FieldsSAML extends Limesurvey\PluginManager\PluginBase
         ]
     ];
 
+    protected $defaultSurveySettings = [
+        'fields_SAML_enabled' => [
+            'type' => 'checkbox',
+            'label' => 'Enabled',
+            'help' => 'Enable the extraction of SAML attributes to the survey',
+            'default' => false
+        ]
+    ];
+
+    protected $htmlTemplates = [];
+
+    protected $fieldParsers = [];
+
     public function init()
     {
+        $this->registerField('name', 'cn', false);
+        $this->registerField('email', 'mail', false);
+        $this->registerField('department', 'authDepartmentId', false);
+        $this->registerField('affiliation', 'eduPersonPrimaryAffiliation', false, 'select');
+        $this->appendToSettings('affiliation_array', [
+            'type' => 'string',
+            'label' => 'Available affiliations',
+            'help' => 'Comma separated, without spaces',
+            'default' => 'faculty,student,staff,affiliate,employee',
+        ], function ($value) {
+            $default = 'faculty,student,staff,affiliate,employee';
+            $affiliations = $this->get('affiliation_array', null, null, $default);
+            $array = explode(',', $affiliations);
+            foreach ($array as $index => $string) {
+                if ($value == $string) {
+                    return 'A' . ($index + 1);
+                }
+            }
+        });
+        $this->registerField('title', 'title', false);
         $this->subscribe('beforeSurveySettings');
         $this->subscribe('newSurveySettings');
         $this->subscribe('beforeSurveyPage');
         $this->subscribe('afterSurveyComplete');
     }
 
+    public function registerField($name, $attributeName, $enabledDefault = false, $templateInput = 'input', $parser = false)
+    {
+        $this->appendToSettings($name . '_mapping', [
+            'type' => 'string',
+            'label' => "SAML attribute used as $name",
+            'default' => $attributeName
+        ]);
+        $this->appendToSettings('fields_' . $name . '_enabled', [
+            'type' => 'checkbox',
+            'label' => "Enable $name field",
+            'help' => "Enable the extraction of $name attribute to the survey",
+            'default' => $enabledDefault
+        ]);
+        $this->appendToHTMLTemplates($name, function ($value) {
+            return "
+                let {$name}Field = document.querySelector('.saml-{$name} {$templateInput}')
+                if ({$name}Field) {
+                    {$name}Field.value = '{$value}'
+                    {$name}Field.disabled = true
+                }
+            ";
+        });
+        $this->appendToParsers($name, $parser);
+    }
+
+    public function appendToSettings($key, $setting)
+    {
+        $this->settings[$key] = $setting;
+    }
+
+    public function appendToDefaultSurveySettings($key, $setting)
+    {
+        $this->defaultSurveySettings[$key] = $setting;
+    }
+
+    public function appendToHTMLTemplates($key, $function)
+    {
+        $this->htmlTemplates[$key] = $function;
+    }
+
+    /**
+     * appendToParsers::k -> M f -> _
+     */
+    public function appendToParsers($key, $function)
+    {
+        $this->fieldParsers[$key] = $function;
+    }
+
+    public function prepareDefaultSurveySettings($event)
+    {
+        return $this->array_map(function($key, $setting) use ($event) {
+            if (strpos($key, 'fields_') === 0) {
+                $setting['current'] = $this->get($key, 'Survey', $event->get('survey'));
+            }
+            return $setting;
+        }, $this->defaultSurveySettings);
+    }
+
+    /**
+     * beforeSurveySettings hook
+     */
     public function beforeSurveySettings()
     {
         $event = $this->event;
 
         $event->set('surveysettings.' . $this->id, [
             'name' => get_class($this),
-            'settings' => [
-                'fields_SAML_enabled' => [
-                    'type' => 'checkbox',
-                    'label' => 'Enabled',
-                    'help' => 'Enable the extraction of SAML attributes to the survey',
-                    'default' => false,
-                    'current' => $this->get('fields_SAML_enabled', 'Survey', $event->get('survey')),
-                ],
-                'fields_email_enabled' => [
-                    'type' => 'checkbox',
-                    'label' => 'Enable email field',
-                    'help' => 'Enable the extraction of email attribute to the survey',
-                    'default' => false,
-                    'current' => $this->get('fields_email_enabled', 'Survey', $event->get('survey')),
-                ],
-                'fields_name_enabled' => [
-                    'type' => 'checkbox',
-                    'label' => 'Enable name field',
-                    'help' => 'Enable the extraction of name attribute to the survey',
-                    'default' => false,
-                    'current' => $this->get('fields_name_enabled', 'Survey', $event->get('survey')),
-                ],
-                'fields_department_enabled' => [
-                    'type' => 'checkbox',
-                    'label' => 'Enabled department field',
-                    'help' => 'Enable the extraction of department attribute to the survey',
-                    'default' => false,
-                    'current' => $this->get('fields_department_enabled', 'Survey', $event->get('survey')),
-                ],
-                'fields_affiliation_enabled' => [
-                    'type' => 'checkbox',
-                    'label' => 'Enable affiliation field',
-                    'help' => 'Enable the extraction of affiliation attribute to the survey',
-                    'default' => false,
-                    'current' => $this->get('fields_affiliation_enabled', 'Survey', $event->get('survey')),
-                ],
-                'fields_title_enabled' => [
-                    'type' => 'checkbox',
-                    'label' => 'Enable title field',
-                    'help' => 'Enable the extraction of title attribute to the survey',
-                    'default' => false,
-                    'current' => $this->get('fields_title_enabled', 'Survey', $event->get('survey')),
-                ]
-            ]
+            'settings' => $this->prepareDefaultSurveySettings($event)
         ]);
     }
 
+    /**
+     * newSurveySettings hook
+     * used to save custom survey settings or use the default value
+     */
     public function newSurveySettings()
     {
         $event = $this->event;
@@ -134,6 +158,9 @@ class FieldsSAML extends Limesurvey\PluginManager\PluginBase
         }
     }
 
+    /**
+     * beforeSurveyPage hook
+     */
     public function beforeSurveyPage()
     {
         $plugin_enabled = $this->get('fields_SAML_enabled', 'Survey', $this->event->get('surveyId'));
@@ -152,55 +179,11 @@ class FieldsSAML extends Limesurvey\PluginManager\PluginBase
                 console.log('Personal Data Set')
         ";
 
-        if ($filter['email']) {
-            $script .= "
-                let emailField = document.querySelector('.saml-email input')
-                if (emailField) {
-                    emailField.value = '{$attributes['email']}'
-                    emailField.disabled = true
-                }
-            ";
-        }
-
-        if ($filter['name']) {
-            $script .= "
-                let nameField = document.querySelector('.saml-name input')
-                if (nameField) {
-                    nameField.value = '{$attributes['name']}'
-                    nameField.disabled = true
-                }
-            ";
-        }
-
-        if ($filter['affiliation']) {
-            $script .= "
-                let affiliationField = document.querySelector('.saml-affiliation select')
-                if (affiliationField) {
-                    affiliationField.value = '{$attributes['affiliation']}'
-                    affiliationField.disabled = true
-                }
-            ";
-        }
-
-        if ($filter['title']) {
-            $script .= "
-                let titleField = document.querySelector('.saml-title input')
-                if (titleField) {
-                    titleField.value = '{$attributes['title']}'
-                    titleField.disabled = true
-                }
-            ";
-        }
-
-        if ($filter['department']) {
-            $script .= "
-                let departmentField = document.querySelector('.saml-department input')
-                if (departmentField) {
-                    departmentField.value = '{$attributes['department']}'
-                    departmentField.disabled = true
-                }
-            ";
-        }
+        array_walk($this->htmlTemplates, function ($templateFunction, $key) {
+            if ($filter[$key]) {
+                $script .= $templateFunction($attributes[key]);
+            }
+        });
 
         $script .= "
             }
@@ -218,18 +201,6 @@ class FieldsSAML extends Limesurvey\PluginManager\PluginBase
         }
     }
 
-    public function mapAffiliation($affiliation)
-    {
-        $array = 'faculty,student,staff,affiliate,employee';
-        $array = $this->get('affiliation_array', null, null, $array);
-        $array = explode(',', $array);
-        foreach ($array as $index => $string) {
-            if ($affiliation == $string) {
-                return 'A' . ($index + 1);
-            }
-        }
-    }
-
     public function getAttributesSAML()
     {
         $AuthSAML = $this->pluginManager->loadPlugin('AuthSAML');
@@ -240,25 +211,25 @@ class FieldsSAML extends Limesurvey\PluginManager\PluginBase
 
         $attributes = $ssp->getAttributes();
 
-        $nameField = $this->get('name_mapping', null, null, 'cn');
-        $emailField = $this->get('email_mapping', null, null, 'mail');
-        $department = $this->get('department_mapping', null, null, 'authDepartmentId');
-        $affiliationField = $this->get('affiliation_mapping', null, null, 'eduPersonPrimaryAffiliation');
-        $titleField = $this->get('title_mapping', null, null, 'title');
+        return $this->array_map(function ($name, $value) use ($attributes) {
+            $fieldName = $this->get($name . '_mapping', null, null);
+            $value = $this->extractTranslatedAttribute($attributes, $fieldName);
+            $parser = $this->$fieldParsers[$name];
+            if ($parser !== false) {
+                $value = $parser($value);
+            }
+            return $value;
+        }, $this->htmlTemplates);
 
         $attributes = [
-            'name' => $this->extractFromAttributes($attributes, $nameField),
-            'email' => $this->extractFromAttributes($attributes, $emailField),
-            'department' => $this->extractFromAttributes($attributes, $department),
-            'title' => $this->extractFromAttributes($attributes, $titleField),
-            'affiliation' => $this->mapAffiliation($this->extractFromAttributes($attributes, $affiliationField)),
+            'affiliation' => $this->mapAffiliation($this->extractTranslatedAttribute($attributes, $affiliationField)),
         ];
-
 
         return $attributes;
     }
 
-    private function extractFromAttributes($attributes, $field) {
+    private function extractTranslatedAttribute($attributes, $field)
+    {
         $index = 0;
         // if SAML attribute is multilingual, set the index to language_index
         if (isset($attributes[$field]) && count($attributes[$field]) > 1) {
@@ -277,26 +248,23 @@ class FieldsSAML extends Limesurvey\PluginManager\PluginBase
 
     public function getAttributesFieldMap($survey)
     {
-        $fieldmap = createFieldMap($survey, 'full', null, false, $response->attributes['startlanguage']);
-        $fieldmap = array_filter($fieldmap, function($item) {
-            if (in_array($item['title'], ['email', 'name', 'department', 'affiliation', 'title'])) {
+        $fieldMap = createFieldMap($survey, 'full', null, false, $response->attributes['startlanguage']);
+        $fieldKeys = array_keys($this->htmlTemplates);
+        $fieldMap = array_filter($fieldMap, function($item) {
+            if (in_array($item['title'], $fieldKeys)) {
                 return true;
             }
             return false;
         });
-        return $fieldmap;
+        return $fieldMap;
     }
 
     public function getAttributesFilter()
     {
         $id = $this->getEvent()->get('surveyId');
-        return [
-            'email' => $this->get('fields_email_enabled', 'Survey', $id),
-            'name' => $this->get('fields_name_enabled', 'Survey', $id),
-            'department' => $this->get('fields_department_enabled', 'Survey', $id),
-            'affiliation' => $this->get('fields_affiliation_enabled', 'Survey', $id),
-            'title' => $this->get('fields_title_enabled', 'Survey', $id),
-        ];
+        return $this->array_map(function ($name, $value) use ($id) {
+            return $this->get("fields_{$name}_enabled", 'Survey', $id);
+        }, $this->htmlTemplates);
     }
 
     public function filterEnabledAttributes($attributes)
@@ -309,11 +277,11 @@ class FieldsSAML extends Limesurvey\PluginManager\PluginBase
 
     public function getSAMLResponse($survey)
     {
-        $fieldmap = $this->getAttributesFieldMap($survey);
+        $fieldMap = $this->getAttributesFieldMap($survey);
         $attributes = $this->getAttributesSAML();
         $attributes = $this->filterEnabledAttributes($attributes);
         $response = [];
-        array_walk($fieldmap, function($item, $key) use (&$response, $attributes) {
+        array_walk($fieldMap, function($item, $key) use (&$response, $attributes) {
             $title = $item['title'];
             if (array_key_exists($title, $attributes)) {
                 $response[$key] = $attributes[$title];
@@ -322,6 +290,9 @@ class FieldsSAML extends Limesurvey\PluginManager\PluginBase
         return $response;
     }
 
+    /**
+     * afterSurveyComplete hook
+     */
     public function afterSurveyComplete()
     {
         $event = $this->getEvent();
@@ -337,5 +308,14 @@ class FieldsSAML extends Limesurvey\PluginManager\PluginBase
                 $status = \SurveyDynamic::model($surveyId)->updateByPk($responseId, $response);
             }
         }
+    }
+
+    /**
+     * array_map::(k -> a -> b) -> [(k, a)] -> [(k, b)]
+     */
+    private function array_map($fn, $array) {
+        $keys = array_keys($array);
+        $valuesMapped = array_map($fn, $keys, $array);
+        return array_combine($keys, $valuesMapped);
     }
 }
