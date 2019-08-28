@@ -11,16 +11,18 @@ Limesurvey plugin to append SAML attributes on survey and the final survey respo
 and **Enable** the plugin
 
 ## Global Configuration
-* **SAML attribute used as name** maps to SAML attribute that will be used as a name
-* **SAML attribute used as email** maps to SAML attribute that will be used as a email
-* **SAML attribute used as department** maps to SAML attribute that will be used as a department
-* **SAML attribute used as title** maps to SAML attribute that will be used as a title
-* **SAML attribute used as affiliation** maps to SAML attribute that will be used as a affiliation
-* **Available affiliations** Comma seperated list. **It is important for latter** when configuring the surveys.
+* **Language Index** if SAML provider support multiple languages, choose the desired language index
+* **SAML attribute used as fullName** maps to SAML attribute that will be used as full name
+* **SAML attribute used as firstName** maps to SAML attribute that will be used as first name
+* **SAML attribute used as lastName** maps to SAML attribute that will be used as last name
+* **SAML attribute used as email** maps to SAML attribute that will be used as email
+* **SAML attribute used as department** maps to SAML attribute that will be used as department
+* **SAML attribute used as title** maps to SAML attribute that will be used as title
+* **SAML attribute used as affiliation** maps to SAML attribute that will be used as affiliation
+* **Available affiliations** Comma separated list. **It is important for latter** when configuring the surveys.
 Values map from A1,A2,...,An.
 *Example*: faculty,student,staff,affiliate,employee
 *Maps to*: A1,A2,A3,A4,A5
-* **Language Index** if SAML provider support multiple languages, choose the desired language index
 
 ![Global Settings](images/global_settings.png)
 
@@ -45,11 +47,13 @@ Values map from A1,A2,...,An.
 
 | Code          | Type            | CSS-Class        |
 |---------------|-----------------|------------------|
+| fullName      | Short Free Text | saml-fullName    |
+| firstName     | Short Free Text | saml-firstName   |
+| lastName      | Short Free Text | saml-lastName    |
 | email         | Short Free Text | saml-email       |
-| name          | Short Free Text | saml-name        |
-| affiliation\* | List Drop Down  | saml-affiliation |
 | department    | Short Free Text | saml-department  |
 | title         | Short Free Text | saml-title       |
+| affiliation\* | List Drop Down  | saml-affiliation |
 
 code and type are highlighted
 ![code and type are highlighted](images/email_field_general.png)
