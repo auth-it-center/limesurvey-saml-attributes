@@ -52,22 +52,7 @@ class FieldsSAML extends Limesurvey\PluginManager\PluginBase
         $this->registerField('lastName', 'sn', false);
         $this->registerField('email', 'mail', false);
         $this->registerField('department', 'authDepartmentId', false);
-        $this->registerField('affiliation', 'eduPersonPrimaryAffiliation', false, 'select', function ($value) {
-            $default = 'faculty,student,staff,affiliate,employee';
-            $affiliations = $this->get('affiliation_array', null, null, $default);
-            $array = explode(',', $affiliations);
-            foreach ($array as $index => $string) {
-                if ($value == $string) {
-                    return 'A' . ($index + 1);
-                }
-            }
-        });
-        $this->appendToSettings('affiliation_array', [
-            'type' => 'string',
-            'label' => 'Available affiliations',
-            'help' => 'Comma separated, without spaces',
-            'default' => 'faculty,student,staff,affiliate,employee',
-        ]);
+        $this->registerField('affiliation', 'eduPersonPrimaryAffiliation', false);
         $this->registerField('title', 'title', false);
         $this->subscribe('beforeSurveySettings');
         $this->subscribe('newSurveySettings');
