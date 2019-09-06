@@ -232,7 +232,7 @@ class FieldsSAML extends Limesurvey\PluginManager\PluginBase
     {
         $fieldMap = createFieldMap($survey, 'full', null, false, $response->attributes['startlanguage']);
         $fieldKeys = array_keys($this->htmlTemplates);
-        $fieldMap = array_filter($fieldMap, function($item) {
+        $fieldMap = array_filter($fieldMap, function($item) use ($fieldKeys) {
             if (in_array($item['title'], $fieldKeys)) {
                 return true;
             }
