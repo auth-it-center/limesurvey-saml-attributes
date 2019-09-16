@@ -58,6 +58,23 @@ class FieldsSAML extends Limesurvey\PluginManager\PluginBase
         $this->subscribe('newSurveySettings');
         $this->subscribe('beforeSurveyPage');
         $this->subscribe('afterSurveyComplete');
+        $this->subscribe('getGlobalBasePermissions');
+    }
+
+    public function getGlobalBasePermissions() {
+        $this->getEvent()->append('globalBasePermissions',array(
+            'plugin_settings' => array(
+                'create' => false,
+                'update' => true, // allow only update permission to display
+                'delete' => false,
+                'import' => false,
+                'export' => false,
+                'read' => false,
+                'title' => gT("Save Plugin Settings"),
+                'description' => gT("Allow user to save plugin settings"),
+                'img' => 'usergroup'
+            ),
+        ));
     }
 
     public function registerField($name, $attributeName, $enabledDefault = false, $templateInput = 'input', $parser = false)
@@ -123,12 +140,15 @@ class FieldsSAML extends Limesurvey\PluginManager\PluginBase
      */
     public function beforeSurveySettings()
     {
-        $event = $this->event;
+        $permission = Permission::model()->hasGlobalPermission('plugin_settings', 'update');
+        if ($permission) {
+            $event = $this->event;
 
-        $event->set('surveysettings.' . $this->id, [
-            'name' => get_class($this),
-            'settings' => $this->prepareDefaultSurveySettings($event)
-        ]);
+            $event->set('surveysettings.' . $this->id, [
+                'name' => get_class($this),
+                'settings' => $this->prepareDefaultSurveySettings($event)
+            ]);
+        }
     }
 
     /**
