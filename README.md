@@ -45,15 +45,16 @@ Values map from A1,A2,...,An.
 ![Personal Data Group](images/personal_data_group.png)
 7. **Create** desired fields and assign them the specified code, type and css-class
 
-| Code          | Type            | CSS-Class        |
-|---------------|-----------------|------------------|
-| fullName      | Short Free Text | saml-fullName    |
-| firstName     | Short Free Text | saml-firstName   |
-| lastName      | Short Free Text | saml-lastName    |
-| email         | Short Free Text | saml-email       |
-| department    | Short Free Text | saml-department  |
-| title         | Short Free Text | saml-title       |
-| affiliation\* | List Drop Down  | saml-affiliation |
+|  Code           | Type            | CSS-Class            |
+|-----------------|-----------------|----------------------|
+| fullName        | Short Free Text | saml-fullName        |
+| firstName       | Short Free Text | saml-firstName       |
+| lastName        | Short Free Text | saml-lastName        |
+| email           | Short Free Text | saml-email           |
+| department      | Short Free Text | saml-department      |
+| title           | Short Free Text | saml-title           |
+| telephoneNumber | Short Free Text | saml-telephoneNumber |
+| affiliation\*   | List Drop Down  | saml-affiliation     |
 
 code and type are highlighted
 ![code and type are highlighted](images/email_field_general.png)
