@@ -54,6 +54,12 @@ class FieldsSAML extends Limesurvey\PluginManager\PluginBase
         $this->registerField('department', 'authDepartmentId', false);
         $this->registerField('affiliation', 'eduPersonPrimaryAffiliation', false);
         $this->registerField('title', 'title', false);
+        $this->registerField('telephoneNumber', 'telephoneNumber', false, 'input', function ($value) {
+            if ($value === 'Attribute telephoneNumber is missing. Please report this incident at the administrators.') {
+                return '';
+            }
+            return $value;
+        });
         $this->subscribe('beforeSurveySettings');
         $this->subscribe('newSurveySettings');
         $this->subscribe('beforeSurveyPage');
@@ -182,6 +188,7 @@ class FieldsSAML extends Limesurvey\PluginManager\PluginBase
         }
 
         $attributes = $this->getAttributesSAML();
+
         $filter = $this->getAttributesFilter();
 
         $script = '';
